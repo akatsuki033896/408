@@ -50,7 +50,22 @@
 - 栈顶：允许插入删除操作的一端
 - 栈底：固定，不允许插入删除操作
 - 空栈：不含任何元素的空表
-- 数学性质：$n$ 个不同元素进栈时，出栈元素不同排列的个数为 $\frac{1}{n+1}C_{2n}^n$
+
+### 卡特兰数
+
+#考点
+
+**定死一个入栈序列的时候可以求得的出栈序列的数量**。
+
+$$
+C_{n}=\dfrac{1}{n+1}C_{2n}^n
+$$
+
+$n$ 个**不同元素**入栈（已确定序列）时，出栈元素不同排列的个数为 $C_{n}$ 
+先序序列（已确定）含 $n$ 个不同元素时，能够确定 $C_{n}$ 种二叉树：对于一个栈，入栈对应了先序序列，出栈对应了中序序列
+
+\[2015\] 先序序列为a, b, c, d的不同二叉树个数是 $\dfrac{1}{5}C_{8}^4$
+类似的，先序序列不定死仅有4个元素，一共有 $A_{4}^4\times \dfrac{1}{5}C_{8}^4$ 种二叉树，$\dfrac{1}{5}C_{8}^4$ 种树形
 ### 顺序栈
 
 用一组**地址连续的存储单元**存放自栈底到栈顶的数据元素
@@ -179,7 +194,7 @@ bool GetTop(SqStack &S, int &x) {
 
 共享栈可以更有效的**利用存储空间**，整个存储空间被占满才发生上溢，存取数据复杂度为 $O(1)$
 
-### 链式存储 - 链栈
+### 链栈
 
 便于将多个栈共享存储空间和提高效率，不存在栈满上溢的情况
 采用没有头结点的单链表实现，所有操作在单链表的表头进行
@@ -319,117 +334,6 @@ bool QueueEmpty(SqQueue 0){
 		return true;
 	else 
 		return false;
-}
-```
-
->[!bug] 假溢出
->顺序队列头指针和尾指针指向同一个地方会发生上溢出，但是 `data[MAX - 1]` 仍然有数据，也就是假溢出 
-### 循环队列
-
- 把存储队列的表从逻辑上视为一个环
-
-```tikz
-\begin{document}
-	\begin{tikzpicture}[scale=1.8,line width=1pt]
-	\tikzstyle{every node}=[font=\huge,rectangle,minimum width=1cm, minimum height=1cm]
-		\node[draw=black] at (1,0) (1){$q_{5}$};
-		\node[draw=black] at (2,0) (2){$q_{6}$};
-		\node[draw=black,dashed] at (3,0) (3){};
-		\node[draw=black] at (4,0) (4){$q_{1}$};
-		\node[draw=black] at (5,0) (5){$q_{2}$};
-		\node[draw=black] at (6,0) (6){$q_{3}$};
-		\node[draw=black] at (7,0) (7){$q_{4}$};
-		
-		\draw[-,line width=1pt] (0.5,0.6) -- (7.5,0.6);
-		\draw[-,line width=1pt] (0.5,-0.6) -- (7.5,-0.6);
-		
-		\draw[-latex] (1) -- (0,0) -- (0,1) -- (8,1) -- (8,0) -- (7);
-		\node at(4,-1) (front){front};
-		\node at(3,-1) (rear){rear};
-		\draw[->] (front) -- (4);
-		\draw[->] (rear) -- (3);
-	\end{tikzpicture}
-\end{document}
-```
-- 初始：`Q.front = Q.rear = 0`;
-- 队首指针进1：`Q.front = (Q.front + 1) % MaxSize`
-- 队尾指针进1：`Q.rear = (Q.rear + 1) % MaxSize` —— 队尾指针后移，当移到最后一个后，下次移动会到第一个位置
-
-#### 判满 / 判空
-
-1. 牺牲一个存储单元来判断队空和队满，入队时少用一个队列单元
-   队满：`(Q.rear + 1) % MaxSize == Q.front`
-   队空：`Q.front == Q.rear`
-   队列元素个数：`(Q.rear + MaxSize - Q.front) % MaxSize`
-2. 不牺牲存储空间，定义一个变量 `size`用于记录队列此时记录了几个数据元素，初始化 `size = 0`，进队成功 `size++`，出队成功`size--`，根据 `size` 的值判断队满与队空
-   队满：`size == MaxSize`
-   队空：`size == 0`
- 
-  ```cpp 
-define MaxSize 10;	 
-typedef struct{
-	ElemType data[MaxSize];   
-	int front, rear;		
-	int size;	//队列当前长度
-}SqQueue;
-
-//初始化队列
-void InitQueue(SqQueue &Q){
-	Q.rear = Q.front = 0;
-	size = 0;
-}
-  ```
-   
-3. 不牺牲存储空间，定义一个变量 `tag`用来表示最近进行的操作
-   每次删除操作成功时，都令`tag = 0`
-   每次插入操作成功时，都令`tag = 1`
-   队满条件：`Q.front == Q.rear && tag == 1`（只有插入操作，才可能导致队满）
-   队空条件：`Q.front == Q.rear && tag == 0`（只有删除操作，才可能导致队空）
-   
-```cpp
-define MaxSize 10;	 
-typedef struct{
-	ElemType data[MaxSize];   
-	int front, rear;		
-	int tag;	//最近进行的是删除or插入
-}SqQueue;
-```
-
-#### 入队
-
-只能从队尾插入
-
-```cpp
-bool EnQueue(SqQueue &Q, ElemType x){
-	if ((Q.rear+1) % MaxSize == Q.front)	//队满
-		return false;
-	Q.data[Q.rear] = x;	//将x插入队尾
-	Q.rear = (Q.rear + 1) % MaxSize;	//队尾指针加1取模
-	return true;
-}
-```
-
-#### 出队
-
-删除一个队头元素，用 `x` 返回
-
-```cpp
-bool DeQueue(SqQueue &Q, ElemType &x){
-	if(Q.rear == Q.front)	//队空报错
-		return false;  
-	x = Q.data[Q.front];
-	Q.front = (Q.front + 1) % MaxSize;	//队头指针后移动
-	return true;
-}
-```
-#### 获取队头元素
-
-```cpp
-bool GetHead(SqQueue &Q, ElemType &x){
-	if(Q.rear == Q.front)	//队空报错
-		return false;  
-	x = Q.data[Q.front];
-	return true;
 }
 ```
 
@@ -578,7 +482,7 @@ bool DeQueue(LinkQueue &Q, ElemType &x){
 	return true;
 }
 ```
-## 双端队列
+### 双端队列
 
 两端都可以进行插入和删除操作的线性表
 
@@ -622,10 +526,91 @@ bool DeQueue(LinkQueue &Q, ElemType &x){
 ```
 
  入队时前端进的元素排列在后端进的元素的前面，出队时，无论前端还是后端出队，先出的元素排列在后出的元素的前面
+ 
 - **输入受限**的双端队列：允许一端插入，两端删除的线性表
 - **输出受限**的双端队列：允许两端插入，一端删除的线性表
 
+### 假溢出和循环队列
+
+#考点 主要围绕指针的设置，判断队空队满等
+
+**假溢出**：顺序队列头指针和尾指针指向同一个地方会发生上溢出，但是 `data[MAX - 1]` 仍然有数据，也就是假溢出，为了解决假溢出的问题引入循环队列。
+
+循环队列把存储队列的表从逻辑上视为一个环。
+
+```tikz
+\begin{document}
+	\begin{tikzpicture}[scale=1.8,line width=1pt]
+	\tikzstyle{every node}=[font=\huge,rectangle,minimum width=1cm, minimum height=1cm]
+		\node[draw=black] at (1,0) (1){$q_{5}$};
+		\node[draw=black] at (2,0) (2){$q_{6}$};
+		\node[draw=black,dashed] at (3,0) (3){};
+		\node[draw=black] at (4,0) (4){$q_{1}$};
+		\node[draw=black] at (5,0) (5){$q_{2}$};
+		\node[draw=black] at (6,0) (6){$q_{3}$};
+		\node[draw=black] at (7,0) (7){$q_{4}$};
+		
+		\draw[-,line width=1pt] (0.5,0.6) -- (7.5,0.6);
+		\draw[-,line width=1pt] (0.5,-0.6) -- (7.5,-0.6);
+		
+		\draw[-latex] (1) -- (0,0) -- (0,1) -- (8,1) -- (8,0) -- (7);
+		\node at(4,-1) (front){front};
+		\node at(3,-1) (rear){rear};
+		\draw[->] (front) -- (4);
+		\draw[->] (rear) -- (3);
+	\end{tikzpicture}
+\end{document}
+```
+
+```tikz
+\begin{document}
+	\begin{tikzpicture}[scale=1.8,line width=1pt]
+	\tikzstyle{every node}=[font=\huge,rectangle,minimum width=1cm, minimum height=1cm]
+		\node[draw=black] at (1,0) (1){$q_{5}$};
+		\node[draw=black] at (2,0) (2){$q_{6}$};
+		\node[draw=black,dashed] at (3,0) (3){};
+		\node[draw=black] at (4,0) (4){$q_{1}$};
+		\node[draw=black] at (5,0) (5){$q_{2}$};
+		\node[draw=black] at (6,0) (6){$q_{3}$};
+		\node[draw=black] at (7,0) (7){$q_{4}$};
+		
+		\draw[-,line width=1pt] (0.5,0.6) -- (7.5,0.6);
+		\draw[-,line width=1pt] (0.5,-0.6) -- (7.5,-0.6);
+		
+		\draw[-latex] (1) -- (0,0) -- (0,1) -- (8,1) -- (8,0) -- (7);
+		\node at(4,-1) (front){front};
+		\node at(2,-1) (rear){rear};
+		\draw[->] (front) -- (4);
+		\draw[->] (rear) -- (2);
+	\end{tikzpicture}
+\end{document}
+```
+
+队空和队满的条件一样
+
+|     | 尾指针指向队尾元素的下个位置                                                                        | 尾指针指向队尾元素                                                                                             |
+| --- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 队空  | `rear == front`                                                                       | `(rear + 1) % MAXSIZE == front`                                                                       |
+| 队满  | `rear == front`                                                                       | `(rear + 1) % MAXSIZE == front`                                                                       |
+| 入队  | `Q.data[rear] = x;`<br>`rear = (rear + 1) % MAXSIZE;`                                 | `rear = (rear + 1) % MAXSIZE;`<br>`Q.data[rear] = x;`                                                 |
+| 出队  | `x = Q.data[front];`<br>`front = (front + 1) % MAXSIZE;`                              | `x = Q.data[front];`<br>`front = (front + 1) % MAXSIZE;`                                              |
+| 长度  | 左边：`(rear - 0)` <br>右边：`(MAXSIZE - front)`<br>长度：`(rear + MAXSIZE - front) % MAXSIZE` | 左边：`(rear - 0 + 1)` <br>右边：`(MAXSIZE - 1 - front + 1)`<br>长度：`(rear + 1 + MAXSIZE - front) % MAXSIZE` |
+
+### 区别队空队满
+
+1. 牺牲一个单元不放元素
+	- 队满：`(Q.rear + 1) % MaxSize == Q.front`
+	- 队空：`Q.front == Q.rear`
+2. 设置 `tag`，删除成功后 `tag = 0`，插入成功后 `tag = 1`
+	- 队满：`Q.front == Q.rear && tag == 1`（只有插入操作，才可能导致队满）
+	- 队空：`Q.front == Q.rear && tag == 0`（只有删除操作，才可能导致队空）
+3. 设置 `size` 表示队列中元素个数
+	- 队满：`size == MaxSize`
+	- 队空：`size == 0`
+
 ## 栈和队列的应用
+
+#考点 
 ### 栈的应用1 - 括号匹配
 
 用栈实现括号匹配：`( ( ( ) ) )` 最后出现的左括号最先被匹配（栈的特性—LIFO）
@@ -1001,15 +986,6 @@ $$
     - 向右域 `right`：指针指向第 i 行的各个元素
 
 ---
-
-## 考点分类
-
-### 栈和队列的操作
-
-### 卡特兰数
-
-==完全不会==
-
 
 
 
