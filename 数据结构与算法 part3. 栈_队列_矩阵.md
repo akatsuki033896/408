@@ -419,69 +419,7 @@ bool QueueEmpty(SqQueue 0){
 \end{tikzpicture}
 \end{document}
 ```
-<center>带头结点的链式队列</center>
 
-#### 初始化 / 判空
-
-```cpp
-typedef struct LinkNode{//链式队列结点
-	ElemType data;
-	struct LinkNode *next;
-} LinkNode;
-
-typedef struct{//链式队列
-	LinkNode * front, *rear;//队列的队头和队尾指针
-} LinkQueue;
-
-//初始化队列（带头结点）
-void InitQueue(LinkQueue &Q){
-	//初始化时，front、rear都指向头结点
-	Q.front = Q.rear = (LinkNode*)malloc(sizeof(LinkNode));
-	Q.front -> next = NULL;
-}
-
-//判断队列是否为空
-bool IsEmpty(LinkQueue Q){
-	if(Q.front == Q.rear)	//也可用 Q.front -> next == NULL
-		return true;
-	else
-		return false;
-}
-```
-
-#### 入队
-
-建立新结点，将新结点插入到链表的尾部，让 `Q.rear` 指向新插入的结点
-
-```cpp
-void EnQueue(LinkQueue &Q, ElemType x){
-	LinkNode *s = (LinkNode *)malloc(sizeof(LinkNode));	//申请一个新结点
-	s->data = x;
-	s->next = NULL;		//s作为最后一个结点，指针域指向NULL
-	Q.rear->next = s;	//新结点插入到当前的rear之后
-	Q.rear = s;			//表尾指针指向新的表尾
-}
-```
-#### 出队
-
-若队列非空，则取出队首，将它从链表删除，让 `Q.front` 指向下个结点
-
-```cpp
-bool DeQueue(LinkQueue &Q, ElemType &x){
-	if(Q.front == Q.rear)
-		return false;	//空队
-	
-	LinkNode *p = Q.front->next;	//p指针指向即将删除的结点 (头结点所指向的结点)
-	x = p->data;
-	Q.front->next = p->next;	//修改头结点的next指针
-					//如果p是最后一个结点的话，p->next为NULL，所以这个关系也是正确的
-	if(Q.rear == p)	//此次是最后一个结点出队
-		Q.rear = Q.front;	//修改rear指针，释放后队列变为空队列
-	free(p);	//释放结点空间
-	
-	return true;
-}
-```
 ### 双端队列
 
 两端都可以进行插入和删除操作的线性表
@@ -596,7 +534,7 @@ bool DeQueue(LinkQueue &Q, ElemType &x){
 | 出队  | `x = Q.data[front];`<br>`front = (front + 1) % MAXSIZE;`                              | `x = Q.data[front];`<br>`front = (front + 1) % MAXSIZE;`                                              |
 | 长度  | 左边：`(rear - 0)` <br>右边：`(MAXSIZE - front)`<br>长度：`(rear + MAXSIZE - front) % MAXSIZE` | 左边：`(rear - 0 + 1)` <br>右边：`(MAXSIZE - 1 - front + 1)`<br>长度：`(rear + 1 + MAXSIZE - front) % MAXSIZE` |
 
-### 区别队空队满
+#### 区别队空队满
 
 1. 牺牲一个单元不放元素
 	- 队满：`(Q.rear + 1) % MaxSize == Q.front`
@@ -608,161 +546,61 @@ bool DeQueue(LinkQueue &Q, ElemType &x){
 	- 队满：`size == MaxSize`
 	- 队空：`size == 0`
 
-## 栈和队列的应用
+\[2019\]请设计⼀个队列，要求满⾜：1. 初始时队列为空；2. ⼊队时，允许增加队列占⽤空间；3.出队后，出队元素所占⽤的空间可重复使⽤，即整个队列所占⽤的空间只增不减；4. ⼊队操作和出队操作的时间复杂度始终保持为O(1)。请回答：
 
-#考点 
-### 栈的应用1 - 括号匹配
+1）该队列是应选择链式存储结构，还是应选择顺序存储结构？
+2）画出队列的初始状态，并给出判断队空和队满的条件。
+3）画出第⼀个元素⼊队后的队列状态。
+4）给出⼊队操作和出队操作的基本过程。
 
-用栈实现括号匹配：`( ( ( ) ) )` 最后出现的左括号最先被匹配（栈的特性—LIFO）
+## 栈的应用
 
-- 初始时栈为空，从左往右遍历算术表达式中的各个括号
-    - 当遍历到左括号时，将其压入栈顶
-    - 当遍历到右括号时，将栈顶的一个左括号弹出，并判断出栈的左括号是否与当前遍历到的右括号匹配
-        - 如果栈空而没有左括号弹出，则匹配失败
-        - 如果匹配，则继续遍历下一个括号
-        - 如果不匹配，则匹配失败
-    - 当遍历过所有的括号后
-        - 若栈空，则匹配成功
-        - 若干非空，则匹配失败
+#考点 选择题
 
-```cpp
-#define MaxSize 10   
+### 括号匹配
 
-typedef struct{
-	char data[MaxSize];
-	int top;
-} SqStack;
+每出现一种左括号，就把他压入栈，等待它对应的右括号。如果此时出现了新的左括号，则视为最高优先级，压入栈并等待新的出现的右括号。遇到了当前等待的右括号就出栈，成对的消除。**最后出现的左括号最先被匹配对应栈后进先出的特性。**
 
-//考试时可直接使用基本接口，但最好简要说明接口
+### 表达式求值
 
-void InitStack(SqStack &S)
-bool StackEmpty(SqStack &S)
-bool Push(SqStack &S, char x)
-bool Pop(SqStack &S, char &x)
+主要掌握手算的方法：高优先级，从左往右
 
+表达式扫描结束但操作符栈非空时依次弹出操作符栈中的符号并计算
 
-bool bracketCheck(char str[], int length){
-	SqStack S;
-	InitStack(S);
-	for(int i=0; i<length; i++){
-		if(str[i] == '(' || str[i] == '[' || str[i] == '{'){
-			Push(S, str[i]);	//扫描到左括号，入栈
-		}
-		else{
-			if(StackEmpty(S))	//扫描到右括号，且当前栈空
-				return false;	//匹配失败
-			
-			char topElem;		//存储栈顶元素
-			Pop(S, topElem);	//栈顶元素出栈
-				
-			if(str[i] == ')' && topElem != '(' )
-				return false;
-			
-			if(str[i] == ']' && topElem != '[' )
-				return false;
-			
-			if(str[i] == '}' && topElem != '{' )
-				return false;	   
-		}
-	}
-	return StackEmpty(S);	//栈空说明匹配成功
-}
-```
+![Image of Screenshot 2026-07-04 161940](https://beeimg.com/images/t26247608114.png)
 
-### 栈的应用2- 表达式求值
-#### 中缀表达式转后缀表达式
+### 中缀表达式转后缀表达式
 
-中缀表达式中必须用括号来指示运算次序，后缀表达式没有括号，运算符在两个运算数后面，用一个栈保存暂时还不能确定运算顺序的运算符
+常考，例如 `A+B*(C-D)-E/F` 转为 `ABCD-*+EF/-`
 
-- 从左到右处理各个元素，直到末尾
-    - 遇到数：直接加入后缀表达式
-    - 遇到界限符：遇到 `'('` 直接入栈；遇到 `')'` 则依次弹出栈内运算符并加入后缀表达式，直到弹出 `'('` 为止。注意：`'('` 不加入后缀表达式； ^[提示：优先计算括号内的内容]
-    - 遇到运算符：依次弹出栈中优先级高于或等于当前运算符的所有运算符 ^[提示：$×$ ÷ 高于$+$ −]，并加入后缀表达式，若碰到 `'('` 或栈空则停止。之后再把当前运算符入栈。 ^[提示：根据左优先原则，先执行左侧高优先级或同等优先级的运算]
-- 按上述方法处理完所有字符后，将栈中剩余运算符依次弹出，并加入后缀表达式
+- 扫描顺序：从左到右
+- 遇到操作数：直接写
+- 遇到运算符：依次弹出栈中大于等于当前运算符优先级的运算符，碰到 `(` 或栈空就停止，入栈当前扫描到的运算符
+- 遇到 `()`：遇到 `(` 入栈，遇到 `)` 弹出栈中 `(` 后入栈的所有运算符 
 
->[!example]
->`A+B*(C-D)-E/F` 转为 `ABCD-*+EF/-`
-#### 后缀表达式求值
+### 递归
 
-栈用于存放当前暂时不能确定运算次序的操作数
+函数调用栈 / 递归工作栈：函数调用时存储调用信息，每进入一层递归，就将递归调用所需信息压入栈顶，每退出一层递归，就从栈顶弹出相应信息。太多层递归可能回导致栈溢出。
 
-- 从左往右扫描下一个元素，直到处理完所有元素
-    - 若扫描到操作数，则压入栈；
-    - 若扫描到运算符，则弹出两个栈顶元素，执行相应的运算，运算结果压回栈顶
-- 若表达式合法，则最后栈中只会留下一个元素，就是最终结果
-
->[!attention]
-先出栈的是“右操作数”（先出栈的原本在栈的右边/上面）
-### 栈的应用3 - 递归和函数调用的工作原理
-
-递归可以把原始问题转换为属性相同，但规模较小的问题（求阶乘、斐波那契数列）
-
-函数调用时，需要用一个栈存储：
 - 调用返回地址：返回到上一层递归的该地址处，继续执行此层递归在该地址之后的代码
 - 实参：递归返回值
 - 局部变量：递归所需参数
-递归调用时，函数调用栈称为 “**递归工作栈**”：
-- 每进入一层递归，就将递归调用所需信息压入栈顶
-- 每退出一层递归，就从栈顶弹出相应信息
-缺点：效率低，太多层递归可能回导致栈溢出；可能包含很多次重复计算
-### 队列的应用1 - 树的层次遍历
 
-### 队列的应用2 - 图的BFS
+## 队列的应用
 
-### 队列的应用3 - 操作系统
+#考点 
 
-- CPU资源分配，先来先服务(FCFS) 中采用就绪进程队列
-- 打印数据缓冲区，SPOOLing技术中采用缓冲区队列
+利用队列辅助实现算法：二叉树层次遍历、BFS、BFS求单源最短路
 
----
-## 数组和特殊矩阵
-如何用最小的内存空间来存储同样的数据
+队列的常⽤场景：
 
-### 数组的定义
-$n$ 个相同类型元素构成的**有限**序列，是线性表的推广，一旦被定义维数和维界就不再改变，只有初始化，存取，修改元素，销毁的操作
+1. 要求公平调度：就绪队列、阻塞队列、各种请求队列等
+2. 需要排队处理数据的缓冲区
+3. 多级反馈队列调度算法
 
-### 数组的存储结构
-#### 一维数组
+## 数组存储
 
-```cpp
-ElemType a[100];
-```
-
-- 各数组元素大小相同，物理上连续存放
-- 起始地址：`LOC`
-- 数组下标：默认从0开始
-- 数组元素 `a[i]` 的存放地址 = `LOC + i × sizeof(ElemType)`
-#### 二维数组
-
-```tikz
-\begin{document}
-	\begin{tikzpicture}[scale=2, line width=1.5pt,
-	every node/.style={draw=black, rectangle, very thick, font =\huge, rectangle, minimum width=6em, minimum height=3em}, 
-	]
-		\foreach \i in {0,1}{
-			\foreach \j in {0,1,2,3}{
-				\ifnum\i=1
-					\node at(\j*2,-\i) {b[\i][\j]};
-				\else
-					\node at(\j*2,-\i) {b[\i][\j]};
-				\fi
-			}
-		}
-	\end{tikzpicture}
-\end{document}
-```
-
-```cpp
-#define M 4
-#define N 2
-ElemType b[M][N];
-```
-
-- 起始地址：`LOC`
-- $M$ 行 $N$ 列的二维数组 `b[M][N]` 中，`b[i][j]`的存储地址：
-    - 行优先存储：`LOC + (i * N + j) * sizeof(ElemType)`
-    - 列优先存储：`LOC + (j * M + i) * sizeof(ElemType)`
-- 行优先 / 列优先存储优点：实现随机存储
+### 行优先存储
 
 ```tikz
 \begin{document}
@@ -781,7 +619,8 @@ ElemType b[M][N];
 	\end{tikzpicture}
 \end{document}
 ```
-<center>行优先存储</center>
+
+### 列优先存储
 
 ```tikz
 \begin{document}
@@ -802,191 +641,41 @@ ElemType b[M][N];
 \end{document}
 ```
 
-<center>列优先存储</center>
 
->[!attention] 
->`A[n][n]` 等价于 `A[0...n-1][0...n-1]`
+## 特殊矩阵存储
 
-### 特殊矩阵的压缩存储
-压缩存储：为多个值相同的元素只分配一个存储空间，对零元素不分配空间
-#### 对称矩阵
+#考点 考频较高，涉及有难度的计算比如求一个元素压缩存储到一维数组后的下标，傻逼王道给的什么公式我背不下来。
 
-$n$ 阶对称矩阵 $\mathbf{A}$ 中对任意元素都有 $a_{ij}=a_{ji}$
+- 下标从0开始：`A[i][j]` **前**有几个元素，对应数组下标就是几
+- 下标从1开始：`A[i][j]` **是**第几个元素，对应数组下标就是几
 
-```tikz
-\begin{document}
-\def\myMatrix{{
-  {0,5,3,3,4},
-  {5,0,2,6,7},
-  {3,2,0,8,9},
-  {3,6,8,0,6},
-  {4,7,9,6,0}
-}}
-\begin{tikzpicture}[scale=1, transform shape, ultra thick,
-  every node/.style={font=\huge, draw=black, very thick, rectangle, minimum width=1cm, minimum height=1cm},
-  ]
-  \def\rowfirst{0};
-  \foreach \row in {0,1,2,3,4} {
-  	\foreach \col in {0,1,2,3,4} {
-  		\pgfmathtruncatemacro{\value}{\myMatrix[\row][\col]};
-  			\ifnum\row=\col
-  				\node[fill=blue!50] at (\col, -\row) {\value};
-  				\node[fill=blue!50] at (\rowfirst+8, -1) {\value};
-  				\xdef\rowfirst{\rowfirst+1};
-  			\else
-  				\ifnum\row>\col
-  					\node[fill=red!50] at (\col, -\row) {\value};
-  					\node[fill=red!50] at (\rowfirst+8, -1) {\value};
-  					\xdef\rowfirst{\rowfirst+1};
-  				\else
-  					\node at (\col, -\row) {\value};
-  				\fi
-  			\fi
-  	}
-  }
-  \def\colfirst{0};
-  \foreach \col in {0,1,2,3,4} {
-  	\foreach \row in {0,1,2,3,4} {
-  		\pgfmathtruncatemacro{\value}{\myMatrix[\row][\col]};
-  			\ifnum\row=\col
-  				\node[fill=blue!50] at (\colfirst+8, -3) {\value};
-  				\xdef\colfirst{\colfirst+1};
-  			\else
-  				\ifnum\row>\col
-  					\node[fill=red!50] at (\colfirst+8, -3) {\value};
-  					\xdef\colfirst{\colfirst+1};
-  				\else
-  				\fi
-  			\fi
-  	}
-  }
-  % 序号
-  \foreach \i in{1,2,3,4,5}{
-  	\node[draw=none, font=\Large] at (\i-1, 1) {\i};
-  	\node[draw=none, font=\Large] at (-1, -\i+1) {\i};
-  }
-  \foreach \i in{0,1,...,14}{
-  	\node[draw=none, font=\Large] at(\i+8, -2){\i};
-  	\node[draw=none, font=\Large] at(\i+8, -4){\i};
-  }
-\end{tikzpicture}
-\end{document}
-```
+`A[i][j]` 行列号可以从0开始也可以从1开始。
+
+### 稀疏矩阵
+
+非零元素的个数相对于矩阵元素的个数来说非常少，以三元组（顺序存储）和十字链表（链式存储）存储。
+
+![Image of Screenshot 2026-07-04 183149](https://beeimg.com/images/q49303136033.png)
+
+### 对称矩阵
+
+存储时按行/列优先只存储上三角+对角线或下三角+对角线即 `A[i][j] = A[j][i]`
+
+![Image of Screenshot 2026-07-04 175346](https://beeimg.com/images/w53190547623.png)
+
+### 三角矩阵
+
+上/下三角矩阵：只存储三角区域元素以及一个常数
+
+![Image of Screenshot 2026-07-04 175253](https://beeimg.com/images/w80182601233.png)
 
 
-只存储主对角线和下（上）三角区的数据
-使用一维数组 `B[n(n+1)/2]` 存储各个元素
+三对角矩阵：按照行/列优先存储三条对角线上的元素
 
-行优先存储主对角线和下三角区数据时
+![Image of Screenshot 2026-07-04 175617](https://beeimg.com/images/k95656191074.png)
 
-$$
-\begin{equation} 
-k_{ij}=\left\{ \begin{array}{**lr**} [1+2+⋯+(i−1)]+j−1=\dfrac{i(i-1)}{2}+j-1 & i\geq j\\  
-k_{ji}& i<j\end{array} \right. 
-\end{equation}
-$$
+\[2020\] 将⼀个$10\times10$阶对称矩阵$M$的上三⻆部分的元素$m_{i,j}(1≤i≤j≤10)$按列优先存⼊C语⾔的⼀维数组$N$中，求元素$m_{7,2}$在$N$中的下标($22$)
 
-列优先存储主对角线和下三角区数据时
-
-$$
-\begin{equation} 
-k_{ij}=\left\{ \begin{array}{**lr**} [n+(n−1)+⋯+(n−j+2)]+i−1=\dfrac{(2n−j+2)(j−1)}{2}+i−1 & i\geq j\\  
-k_{ji}& i<j\end{array} \right. 
-\end{equation}
-$$
-
-#### 三角矩阵
-
-上(下)三角区的所有元素都为同一常量
-
-```tikz
-\begin{document}
-\def\myMatrix{{
-  {1,0,0,0,0},
-  {5,1,0,0,0},
-  {3,2,1,0,0},
-  {3,6,8,1,0},
-  {4,7,9,6,1}
-}}
-\begin{tikzpicture}[scale=1, ultra thick,
-  every node/.style={font=\huge, draw=black, very thick, rectangle, minimum width=1cm, minimum height=1cm},
-  ]
-  \def\rowfirst{0};
-  \foreach \row in {0,1,2,3,4} {
-  	\foreach \col in {0,1,2,3,4} {
-  		\pgfmathtruncatemacro{\value}{\myMatrix[\row][\col]};
-  			\ifnum\row=\col
-  				\node[fill=blue!50] at (\col, -\row) {\value};
-  				\node[fill=blue!50] at (\rowfirst+8, -1) {\value};
-  				\xdef\rowfirst{\rowfirst+1};
-  			\else
-  				\ifnum\row>\col
-  					\node[fill=red!50] at (\col, -\row) {\value};
-  					\node[fill=red!50] at (\rowfirst+8, -1) {\value};
-  					\xdef\rowfirst{\rowfirst+1};
-  				\else
-  					\node at (\col, -\row) {\value};
-  				\fi
-  			\fi
-  	}
-  }
-  \def\colfirst{0};
-  \foreach \col in {0,1,2,3,4} {
-  	\foreach \row in {0,1,2,3,4} {
-  		\pgfmathtruncatemacro{\value}{\myMatrix[\row][\col]};
-  			\ifnum\row=\col
-  				\node[fill=blue!50] at (\colfirst+8, -3) {\value};
-  				\xdef\colfirst{\colfirst+1};
-  			\else
-  				\ifnum\row>\col
-  					\node[fill=red!50] at (\colfirst+8, -3) {\value};
-  					\xdef\colfirst{\colfirst+1};
-  				\else
-  				\fi
-  			\fi
-  	}
-  }
-  % 存储常量c
-  \node at(23,-1) {0};
-  \node at(23,-3) {0};
-  % 序号
-  \foreach \i in{1,2,3,4,5}{
-  	\node[draw=none, font=\Large] at (\i-1, 1) {\i};
-  	\node[draw=none, font=\Large] at (-1, -\i+1) {\i};
-  }
-  \foreach \i in{0,1,...,15}{
-  	\node[draw=none, font=\Large] at(\i+8, -2){\i};
-  	\node[draw=none, font=\Large] at(\i+8, -4){\i};
-  }
-\end{tikzpicture}
-\end{document}
-```
-
-只存储主对角线，元素一次，常量一次
-
-行优先存储主对角线和上三角区数据时
-
-$$
-\begin{equation} 
-k_{ij}=\left\{ \begin{array}{**lr**} n+(n-1)+\dots+(n-i+2)+(j-i+1)-1=\dfrac{(i-1)(2n-i+2)}{2}+(j-i) & i\geq j\\  
-\dfrac{n(n+1)}{2}& i<j\end{array} \right. 
-\end{equation}
-$$
-#### 三对角矩阵
-
-所有非零元素都集中在以主对角线为中心的三条对角线，其他都为零
-当 $|i−j|>1$ 时，有 $a_{ij}=0$，即只需存储主对角线以及上下左右相邻元素第一行和最后一行两个元素，其余三个元素，共 $3n−2$ 个元素
-#### 稀疏矩阵
-
-非零元素的个数相对于矩阵元素的个数来说非常少
-
-- 顺序存储——三元组`<行，列，值>`
-- 链式存储——十字链表法
-    - 向下域 `down`：指针指向第 j 列的各个元素
-    - 向右域 `right`：指针指向第 i 行的各个元素
-
----
-
-
-
+\[2021\] ⼆维数组$A$按⾏优先⽅式存储，每个元素占⽤1个存储单元。若元素`A[0][0]`的存储地址
+是100，`A[3][3]`的存储地址是220，则元素`A[5][5]`的存储地址是($39\times5+6+100-1=300$)
 
