@@ -8,7 +8,7 @@
         "type": "tabs",
         "children": [
           {
-            "id": "d98a42fce65a230c",
+            "id": "92839e35b0468da0",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -78,7 +78,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "9b70e3dca8165b01",
@@ -194,15 +195,17 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "cf8f2af7c8d51092",
+  "active": "92839e35b0468da0",
   "lastOpenFiles": [
-    "积分计算.md",
+    "一元函数积分学 part1. 积分计算.md",
     "数据结构与算法 part6. 图.md",
     "计算机组成原理 part1. 计算机系统概述.md",
-    "数据结构与算法 part1. 绪论.md",
-    "数据结构与算法 part2. 线性表.md",
+    "Welcome.md",
     "数据结构与算法 part3. 栈_队列_矩阵.md",
+    "数据结构与算法 part2. 线性表.md",
+    "数据结构与算法 part1. 绪论.md",
     "数据结构与算法 part5. 树.md",
+    "积分计算.md",
     "Pasted image 20260709175654.png",
     "_assets/并查集优化合并.png",
     "_assets/并查集路径压缩.png",
@@ -215,7 +218,6 @@
     "_assets/树和森林转换.png",
     "_assets",
     "数据结构与算法 part4. 串.md",
-    "Welcome.md",
     "循环队列.md",
     "Untitled.canvas",
     "Ch3. 一元函数积分学.md"

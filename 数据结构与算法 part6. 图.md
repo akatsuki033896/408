@@ -3,6 +3,23 @@
 
 #考点 推断计算
 
+### 顶点之间的关系
+
+1. 路径：顶点 $v_{p}$ 到顶点 $v_{q}$ 之间的一条路径是 $v_{p},v_{i_{1}},v_{i_{2}},\dots,v_{i_{m}},v_{q}$，边的数目为路径长度
+2. **简单路径：在路径序列中，顶点不重复出现的路径**
+   **简单回路：除第一个顶点和最后一个顶点外，其余顶点不重复出现的回路**
+   **回路不是简单路径**
+3. 路径长度：路径上边的数目
+4. 点 $u$ 到点 $v$ 的距离：最短路径. 若不存在路径则为 $\infty$
+5. 连通：无向图中若顶点 $v$ 到 $w$ 有路径存在则是连通的
+   连通图：任意两个点都是连通的图
+   对于 $n$ 个顶点的无向连通图 $G$ 最少有 $n−1$ 条边
+   若 $G$ 是非连通图，则最多可能有 $C_{n-1}^2$ 条边
+6. 强联通：有向图中若一对顶点 $v$ 和 $w$，$v\to w$ 和 $w\to v$ 都有路径
+   强连通图：任意一对顶点都是强连通的图，若有 $n$ 个顶点则最少有 $n$ 条边
+
+### 图的常见概念
+
 1. 图 $G=(V,E)$ 和 $G'=(V',E')$，如果$V’⊆V$，$E’⊆E$，则称$G$’为$G$的⼦图。
 2. 完全图：**每一对相异的顶点都有且只有一条边相连**。
    ⽆向完全图有$\dfrac{n(n-1)}{2}$条边，有向完全图有$n(n-1)$条弧。完全图⼀定是连通/强连通的，并且完全图的边数是给定顶点数量时最多的。
@@ -454,7 +471,7 @@ $$
 
 ## 十字链表 / 邻接多重表
 
-#考点 
+#考点 结构本身就是一个考点
 
 ## DFS / BFS
 
@@ -645,4 +662,118 @@ void BFS_DISTANCE(Graph G, int u) {
 
 ## 拓扑排序
 
+#考点 比较热门
+
+### 有向无环图
+
+描述$((a+b)(b(c+d))+(c+d)e)((c+d)*e)$
+
+```tikz
+\begin{document}
+	\begin{tikzpicture}[scale=1.5, line width=1.5pt,
+	every node/.style={draw=black, circle, very thick,font =\huge, minimum size=3em}, 
+	level 1/.style={sibling distance=16em/1, level distance=3em},%横向距离与轴向距离
+	level 2/.style={sibling distance=16em/2, level distance=3em},
+	level 3/.style={sibling distance=16em/4, level distance=3em},
+	level 4/.style={sibling distance=16em/8, level distance=3em},
+	level 5/.style={sibling distance=16em/8, level distance=3em},
+	]
+	\node at(0,0) {$*$}
+		child {node {$+$}
+			child {node {$*$}
+				child {node {$+$}
+					child {node {$a$}}
+					child {node {$b$}}
+				}
+				child {node {$*$}
+					child {node {$b$}}
+					child {node {$+$}
+						child {node {$c$}}
+						child {node {$d$}}
+					}
+				}
+			}
+	        child {node {$*$}
+				child {node {$+$}
+					child {node {$c$}}
+					child {node {$d$}}
+				}
+				child {node {$e$}}
+			}
+		}
+        child {node {$*$}
+			child {node {$+$}
+				child {node {$c$}}
+				child {node {$d$}}
+			}
+			child {node {$e$}}
+		};
+	\end{tikzpicture}
+\end{document}
+```
+
+```tikz
+\begin{document}
+\begin{tikzpicture}[scale=1.5, line width=1.5pt,
+	every node/.style={draw=black, circle, very thick,font =\huge, minimum size=3em}, 
+	level 1/.style={sibling distance=5em/1, level distance=3em},%横向距离与轴向距离
+	level 2/.style={sibling distance=5em/2, level distance=3em},
+	level 3/.style={sibling distance=5em/2, level distance=3em},
+	level 4/.style={sibling distance=5em/2, level distance=3em},
+	]
+	\node at(8,0) (1) {$*$}
+		child {node (2) {$+$}
+			child {node (3) {$*$}
+				child {node (5) {$+$}
+					child {node (9) {$a$}}
+					child {node (10) {$b$}}
+				}
+				child {node (6) {$*$}}
+			}
+		}
+        child[level distance=6em] {node (4) {$*$}
+			child[level distance=3em] {node (7) {$+$}
+				child {node (11) {$c$}}
+				child {node (12) {$d$}}
+			}
+			child[level distance=3em] {node (8) {$e$}}
+		};
+		\draw[-](2)--(4);
+		\draw[-](6)--(7);
+		\draw[-](6)--(10);
+	\end{tikzpicture}
+\end{document}
+```
+
+合并后顶点不存在重复的操作数
+
+1. 把各个操作数不重复地排成一排
+2. 标出各个运算符的生效顺序（先后顺序有点出入无所谓，主要为了不遗漏）
+3. 按顺序加入运算符，注意“分层”
+4. 从底向上逐层检查**同层的运算符**是否可以合并
+
+### 拓扑排序
+
+**拓扑排序**是对有向无环图的顶点的一种排序，它使得若存在一条从顶点A到顶点B的路径，则在排序中B出现在A的后面。
+
+1. 在有向图中选择一个入度为0的顶点并输出它
+2. 从图中删除该顶点和它的所有出度
+
+重复这2步操作，直到不存在入度为0的顶点，若最终输出的顶点数小于有向图中的顶点数，则图中**存在环**。否则输出的顶点序列即为该图的一个拓扑序列。
+
+1. 拓扑排序可能不唯一
+2. 若有向图中有环，则该图不存在拓扑排序
+3. 若有向图的拓扑有序序列唯一，则图中入度为0和出度为0的顶点都只有1个
+4. 顶点数大于1的强连通图不能进行拓扑排序
+5. 如果拓扑序列中A在B之前，原图中不一定有<A,B>
+6. 有向无环图的拓扑序列唯一，并不能唯一确定该图
+
+## 最小生成树
+
 #考点 
+
+生成树：无向连通图中一个包含图中所有顶点的极小连通子图
+最小生成树：所有生成树中边的权值之和最小的生成树
+
+
+
