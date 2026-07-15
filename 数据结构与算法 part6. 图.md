@@ -469,9 +469,43 @@ $$
 
 邻接矩阵中 $A^k[i][j]$ 表示从顶点$i$到顶点$j$之间⻓度为$k$的路径条数。
 
-## 十字链表 / 邻接多重表
+## 十字链表
 
 #考点 结构本身就是一个考点
+
+存储有向图，十字链表表示不唯一，但一个十字链表能唯一确定一个图，时间复杂度$O(|V|+|E|)$
+
+| 顶点结点 | data | firstin            | firstout           |
+| ---- | ---- | ------------------ | ------------------ |
+|      | 数据   | 指向以`data`为弧头的第一个结点 | 指向以`data`为弧尾的第一个结点 |
+
+| 弧结点 | tailvex | headvex | hlink     | tlink    | info     |
+| --- | ------- | ------- | --------- | -------- | -------- |
+|     | 弧尾顶点    | 弧头顶点    | 弧头相同的下一条弧 | 弧尾相同下一条弧 | 弧的信息（省略） |
+
+![[十字链表.png]]
+
+可以方便计算顶点$v_{i}$的入度和出度，寻找依附于某一结点的所有弧：
+
+- 找c出度：从$v_{3}$结点的`firstout`指针域一直顺着右边找，就是$v_{3}$的邻接表
+- 找入度：从`firstin`指针域找到`02`和`32`为止，就是$v_{3}$的逆邻接表
+## 邻接多重表
+
+#考点 2024考了
+
+无向图的一种链式存储结构，邻接矩阵、邻接表存储无向图时，每条边对应两份冗余信息，删除顶点、删除边等操作时间复杂度高，邻接矩阵的空间复杂度高
+
+| 顶点结点 | data | firstedge     |
+| ---- | ---- | ------------- |
+|      | 数据   | 指向第一条依附于该顶点的边 |
+
+| 边结点 | ivex         | ilink           | jvex         | jlink           | info     |
+| --- | ------------ | --------------- | ------------ | --------------- | -------- |
+|     | 该边依附的两顶点的编号1 | 指向下一条依附`ivex`的边 | 该边依附的两顶点的编号2 | 指向下一条依附`jvex`的边 | 边的信息（省略） |
+
+![[邻接多重表.png]]
+
+每条边只会被存储一次，且所有依附于同一结点的边都被串联在一个链表中，便于计算结点的度 / 寻找依附于某一结点的所有边。
 
 ## DFS / BFS
 
@@ -631,8 +665,8 @@ void CheckGraphCycle(Graph G) {
 
 1. 每个顶点v在DFS退出递归前都会记录当前时间戳`time`，并赋值给
 `finishTime[v]`
-2. 因为后继节点的DFS会先于v完成，因此它们的finishTime⼀定⽐v⼩
-3. 最后按照finishTime从⼤到⼩排序所有顶点，就得到了⼀个合法的拓扑序列
+2. 因为后继节点的DFS会先于v完成，因此它们的`finishTime`⼀定⽐v⼩
+3. 最后按照`finishTime`从⼤到⼩排序所有顶点，就得到了⼀个合法的拓扑序列
 
 #### BFS计算单源最短路
 
@@ -745,7 +779,7 @@ void BFS_DISTANCE(Graph G, int u) {
 \end{document}
 ```
 
-合并后顶点不存在重复的操作数
+**合并后顶点不存在重复的操作数**。
 
 1. 把各个操作数不重复地排成一排
 2. 标出各个运算符的生效顺序（先后顺序有点出入无所谓，主要为了不遗漏）
@@ -758,14 +792,38 @@ void BFS_DISTANCE(Graph G, int u) {
 
 1. 在有向图中选择一个入度为0的顶点并输出它
 2. 从图中删除该顶点和它的所有出度
+3. 重复这2步操作，直到不存在入度为0的顶点，若最终输出的顶点数小于有向图中的顶点数，则图中**存在环**。否则输出的顶点序列即为该图的一个拓扑序列。
 
-重复这2步操作，直到不存在入度为0的顶点，若最终输出的顶点数小于有向图中的顶点数，则图中**存在环**。否则输出的顶点序列即为该图的一个拓扑序列。
+#### DFS实现
+
+1. 每个顶点v在DFS退出递归前都会记录当前时间戳`time`，并赋值给
+`finishTime[v]`
+2. 因为后继节点的DFS会先于v完成，因此它们的`finishTime`⼀定⽐v⼩
+3. 最后按照`finishTime`从⼤到⼩排序所有顶点，就得到了⼀个合法的拓扑序列
+
+```cpp
+bool visited[MVNum];
+int finishTime[MVNum];
+int time;
+void TopoSortDFS(Graph G, int v) {
+	visited[v] = true;
+	for (w = FirstNeighbor(G, v); w >= 0; w = NextNeighbor(G, v, w)) {
+		if (!visited[w]) {
+			TopoSortDFS(G, w);
+		}
+	}
+	time++;
+	finishTime[v] = time;
+}
+```
+
+#### 性质
 
 1. 拓扑排序可能不唯一
 2. 若有向图中有环，则该图不存在拓扑排序
 3. 若有向图的拓扑有序序列唯一，则图中入度为0和出度为0的顶点都只有1个
 4. 顶点数大于1的强连通图不能进行拓扑排序
-5. 如果拓扑序列中A在B之前，原图中不一定有<A,B>
+5. 如果拓扑序列中A在B之前，原图中不一定有`<A,B>`
 6. 有向无环图的拓扑序列唯一，并不能唯一确定该图
 
 ## 最小生成树
@@ -775,5 +833,217 @@ void BFS_DISTANCE(Graph G, int u) {
 生成树：无向连通图中一个包含图中所有顶点的极小连通子图
 最小生成树：所有生成树中边的权值之和最小的生成树
 
+1. 只有⽆向连通图才有⽣成树的概念
+2. $n$个顶点的图，最⼩⽣成树有$n-1$条边
+3. 对于最⼩⽣成树，再加⼀条边就会形成环路，再减⼀条边就会不连通
+4. **若原图存在权值相同的边，那么该图的最⼩⽣成树可能不唯⼀，若原图的边权值互不相等，那么该图的最⼩⽣成树⼀定唯⼀**
 
+![[最小生成树.png]]
 
+### Prim算法
+
+适⽤于边稠密，顶点少图，$O(\vert V\vert)^2$
+
+**贪心策略**。从一个初始顶点开始，逐步添加**和已添加的顶点相邻的且权重最小的边**，直到包含所有顶点，形成最小生成树。
+
+```tikz
+\usetikzlibrary{positioning}
+\usepackage{array}
+\begin{document}
+	\begin{tikzpicture}[scale=1, ultra thick,
+	every node/.style={draw=black, circle, very thick,font =\huge, minimum size=3em}, 
+	arrow/.style={-},
+	]
+	\node at(0,2.5) (A) {$A$};
+	\node at(0,-0.5) (C) {$C$};
+	\node at(-3,0) (B) {$B$};
+	\node at(3,0) (D) {$D$};
+	\node at(-2,-3) (E) {$E$};
+	\node at(2,-3) (F) {$F$};
+	
+	\draw[arrow] (A)--(B)node[midway, left,  font=\large, draw=none]{6};
+	\draw[arrow] (A)--(C)node[midway, right, font=\large, draw=none]{1};
+	\draw[arrow] (A)--(D)node[midway, right, font=\large, draw=none]{5};
+	\draw[arrow] (B)--(C)node[midway, above, font=\large, draw=none]{5};
+	\draw[arrow] (B)--(E)node[midway, left,  font=\large, draw=none]{3};
+	\draw[arrow] (D)--(C)node[midway, above, font=\large, draw=none]{4};
+	\draw[arrow] (D)--(F)node[midway, right, font=\large, draw=none]{2};
+	\draw[arrow] (C)--(E)node[midway, left,  font=\large, draw=none]{6};
+	\draw[arrow] (C)--(F)node[midway, right, font=\large, draw=none]{4};
+	\draw[arrow] (E)--(F)node[midway, above, font=\large, draw=none]{6};
+	\end{tikzpicture}
+	
+	\hspace{5em}
+	
+	\begin{tikzpicture}[scale=1, ultra thick,
+	every node/.style={draw=black, circle, very thick,font =\huge, minimum size=3em}, 
+	arrow/.style={-, dashed},
+	]
+	\node at(0,2.5) (A) {$A$};
+	\node at(0,-0.5) (C) {$C$};
+	\node at(-3,0) (B) {$B$};
+	\node at(3,0) (D) {$D$};
+	\node at(-2,-3) (E) {$E$};
+	\node at(2,-3) (F) {$F$};
+	
+	\draw[arrow] (A)--(B)node[midway, left,  font=\large, draw=none]{6};
+	\draw[-, red] (A)--(C)node[midway, right, font=\large, draw=none]{1};
+	\draw[arrow] (A)--(D)node[midway, right, font=\large, draw=none]{5};
+	\draw[-, red] (B)--(C)node[midway, above, font=\large, draw=none]{5};
+	\draw[-, red] (B)--(E)node[midway, left,  font=\large, draw=none]{3};
+	\draw[-, red] (D)--(C)node[midway, above, font=\large, draw=none]{4};
+	\draw[-, red] (D)--(F)node[midway, right, font=\large, draw=none]{2};
+	\draw[arrow] (C)--(E)node[midway, left,  font=\large, draw=none]{6};
+	\draw[arrow] (C)--(F)node[midway, right, font=\large, draw=none]{4};
+	\draw[arrow] (E)--(F)node[midway, above, font=\large, draw=none]{6};
+	\end{tikzpicture}
+\end{document}
+```
+
+### Kruskal算法
+
+适⽤于边稀疏，顶点多的图，$O(\vert E\vert log\vert E\vert)$
+
+1. 将各条边按权值排序
+2. 依次检查每条边的两个顶点是否连通（是否属于同一个集合，并查集）不连通就连起来，已连通就跳过
+
+```tikz
+\usetikzlibrary{positioning}
+\usepackage{array}
+\begin{document}
+	\begin{tikzpicture}[scale=1, transform shape, ultra thick,
+	every node/.style={draw=black, circle, very thick,font =\huge, minimum size=3em}, 
+	arrow/.style={-},
+	]
+	\node at(0,2.5) (A) {$A$};
+	\node at(0,-0.5) (C) {$C$};
+	\node at(-3,0) (B) {$B$};
+	\node at(3,0) (D) {$D$};
+	\node at(-2,-3) (E) {$E$};
+	\node at(2,-3) (F) {$F$};
+	
+	\draw[arrow] (A)--(B)node[midway, left,  font=\large, draw=none]{6};
+	\draw[arrow] (A)--(C)node[midway, right, font=\large, draw=none]{1};
+	\draw[arrow] (A)--(D)node[midway, right, font=\large, draw=none]{5};
+	\draw[arrow] (B)--(C)node[midway, above, font=\large, draw=none]{5};
+	\draw[arrow] (B)--(E)node[midway, left,  font=\large, draw=none]{3};
+	\draw[arrow] (D)--(C)node[midway, above, font=\large, draw=none]{4};
+	\draw[arrow] (D)--(F)node[midway, right, font=\large, draw=none]{2};
+	\draw[arrow] (C)--(E)node[midway, left,  font=\large, draw=none]{6};
+	\draw[arrow] (C)--(F)node[midway, right, font=\large, draw=none]{4};
+	\draw[arrow] (E)--(F)node[midway, above, font=\large, draw=none]{6};
+	
+	\end{tikzpicture}
+	
+	\hspace{2em}
+	
+	\begin{tikzpicture}[scale=1, ultra thick,
+	every node/.style={draw=black, circle, very thick,font =\huge, minimum size=3em}, 
+	arrow/.style={-, dashed},
+	]
+	\node at(0,2.5) (A) {$A$};
+	\node at(0,-0.5) (C) {$C$};
+	\node at(-3,0) (B) {$B$};
+	\node at(3,0) (D) {$D$};
+	\node at(-2,-3) (E) {$E$};
+	\node at(2,-3) (F) {$F$};
+	
+	\draw[arrow] (A)--(B)node[midway, left,  font=\large, draw=none]{6};
+	\draw[-, red] (A)--(C)node[midway, right, font=\large, draw=none]{1};
+	\draw[arrow] (A)--(D)node[midway, right, font=\large, draw=none]{5};
+	\draw[-, red] (B)--(C)node[midway, above, font=\large, draw=none]{5};
+	\draw[-, red] (B)--(E)node[midway, left,  font=\large, draw=none]{3};
+	\draw[-, red] (D)--(C)node[midway, above, font=\large, draw=none]{4};
+	\draw[-, red] (D)--(F)node[midway, right, font=\large, draw=none]{2};
+	\draw[arrow] (C)--(E)node[midway, left,  font=\large, draw=none]{6};
+	\draw[arrow] (C)--(F)node[midway, right, font=\large, draw=none]{4};
+	\draw[arrow] (E)--(F)node[midway, above, font=\large, draw=none]{6};
+	\end{tikzpicture}
+\end{document}
+```
+
+## 最短路径
+
+#考点 模拟过程，Floyd从未考过
+
+### Dijkstra算法
+
+**贪心策略**。处理带权图的单源最短路径问题，但不适用于有负权值的带权图。可求所有顶点间的最短路径，重复 $|V|$ 次即可，时间复杂度 $O(|V|^2)$
+
+- `final[ ]` ：标记各顶点是否已找到最短路径
+- `dist[ ]` ：记录各顶点到源顶点的最短路径长度
+- `path[ ]` ：记录各顶点目前最短路径上的前驱
+
+1. 初始化三个数组信息
+2. 观察`final[]`数组，若`final[i]=0`且`dist[i]`最⼩，则将`final[i]`改为1，收录该顶点`vi`到最优路径集合中
+3. 对`vi`的邻接点`vj`做如下判断：如果`dist[i]+<vi,vj>`的权值$<$`dist[j]`，则更新`dist[j]`与`path[j]`
+4. 循环2和3，直到所有顶点都找到最短路径
+
+```tikz
+\usetikzlibrary{positioning}
+\usepackage{array}
+\begin{document}
+  \begin{tikzpicture}[scale=1.5, ultra thick,
+  every node/.style={draw=black, circle, very thick,font =\huge, minimum size=3em}, 
+  arrow/.style={-latex},
+  ]
+  \node at(-2,1.5) (0) {$V_{0}$};
+  \node at(0,3) (1) {$V_{1}$};
+  \node at(3,3) (2) {$V_{2}$};
+  \node at(3,0) (3) {$V_{3}$};
+  \node at(0,0) (4) {$V_{4}$};
+  
+  \draw[arrow] (0)--(2)node[midway, above, font=\large, draw=none]{1};
+  \draw[arrow] (0)--(4)node[midway, above, font=\large, draw=none]{10};
+  \draw[arrow] (1)--(4)node[midway, left, font=\large, draw=none]{5};
+  \draw[arrow] (1)--(3)node[midway, below, font=\large, draw=none]{1};
+  \draw[arrow] (2)--(1)node[midway, above, font=\large, draw=none]{1};
+  \draw[arrow] (2)--(4)node[midway, above, font=\large, draw=none]{7};
+  \draw[arrow] (3)--(4)node[midway, above, font=\large, draw=none]{1};
+  \end{tikzpicture}
+\end{document}
+```
+
+$V_0$ 开始：
+
+1. 顶点 $V_{0}$ 到顶点 $V_{2}$ 的距离最短，为$1$，路径为 $V_{0}→V_{2}$
+2. 顶点 $V_{0}$ 到顶点 $V_{1}$ 的距离最短，为$1+1=2$，路径为 $V_{0}→V_{2}→V_{1}$
+3. 顶点 $V_{0}$ 到顶点 $V_{3}$ 的距离最短，为$1+1+1=3$，路径为 $V_{0}\to V_{2}\to V_{1}\to V_{3}$
+4. 顶点 $V_{0}$ 到顶点 $V_{4}$ 的距离最短，为$1+1+1+1=4$，路径为 $V_{0}\to V_{2}\to V_{1}\to V_{3}\to V_{4}$
+
+### Floyd算法
+
+**动态规划**，求出每一对顶点之间的最短路径，将问题的求解分为多个阶段。 
+
+对于 $n$ 个顶点的图 $G$，通过状态转移求任意一对顶点 $V_i\to V_j$ 之间的最短路径，可以用于负权值带权图，但是不能解决带有“负权回路”的图(有负权值的边组成回路)，复杂度$O(\vert V \vert^3)$
+
+1. 初始化矩阵
+2. 依次选择顶点作为中转点
+3. 以中转点为中⼼，画出横、竖、对⻆线三条线，线上的数字不变，逐个检查线外的每个数字，若该数字所在⾏、列对应的彩带上的值相加⼩于数字本身，则⽤更⼩的值替换，否则保持不变
+4. 循环2和3，直到找到所有顶点对之间的最短路径
+
+## 关键路径
+
+#考点 求活动，手算关键路径，事件和活动求法
+
+| 概念                      | 求法                                                                                              |
+| ----------------------- | ----------------------------------------------------------------------------------------------- |
+| 事件$v_{i}$的最早发生时间$v_{e}$ | $V_{e}(源点)=0$<br>$V_{e}(k)= max{V_{e}(j)+Weight(V_{j},V_{k})}$，$V_{k}$为$V_{j}$的任意后继             |
+| 事件$v_{i}$的最晚发生时间$v_{1}$ | $V_{l}$(汇点)=$V_{e}$(汇点)<br>$V_{l}(k)=min\{V_{l}(j)-Weight(V_{k},V_{j})\}$ ，$V_{k}$为$V_{j}$的任意前驱 |
+| 活动$a_{i}$的最早发生时间$e$     | 该弧起点顶点的$V_{e}$                                                                                  |
+| 活动$a_{i}$的最迟开始时间$l$     | 该弧终点的顶点的$V_{l}$减去弧的权值                                                                           |
+
+1. 活动的时间余量：$l-e$
+2. 关键活动的时间余量为0（l=e），关键活动组成了关键路径
+3. 关键路径可能不唯⼀
+4. 关键路径是持续时间最⻓（权值之和最⼤）的那条路径
+5. 缩短关键路径，并不⼀定导致整个⼯期加快
+	- 如果只有⼀条关键路径，缩短关键路径，⼀定导致整个⼯期加快
+	- 如果有多条关键路径，缩短关键路径，不⼀定导致整个⼯期加快，因为缩短了路径⻓度的那条关键路径将不再是关键路径
+	- 缩短所有关键路径上共有的任意⼀个关键活动的持续时间才会导致整个⼯期加快
+	- 延⻓任意⼀条关键路径上的关键活动的持续时间都会导致整个⼯期减慢
+	- 求关键路径是以拓扑排序为基础的
+
+![[AOV.png]]
+
+一共有三条路径：bdeh / bdcg / bfh，要加快进度就要找出三条关键路径都共有的活动，可以是d和f，不一定要把b选进去。
